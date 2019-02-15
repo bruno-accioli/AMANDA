@@ -39,7 +39,7 @@ def kMeans(X, k):
 
 
 def labelPropagation(X, y, K):
-    return label_propagation.LabelSpreading(kernel='knn', n_neighbors=K, alpha=1).fit(X, y)
+    return label_propagation.LabelSpreading(kernel='knn', n_neighbors=K, alpha=0.2).fit(X, y)
 
 
 def SGDClassifier(X, y):

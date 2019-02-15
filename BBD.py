@@ -18,7 +18,7 @@ for a in alpha:
       
 
 ro = np.linspace(0, 1, 100)
-alpha = [-2, -0.01, -0.001, 1.001, 1.01, 2]
+alpha = [-10, -2, -0.01, -0.5, -0.001, 1.001, 1.01, 2, 10]
 
 for a in alpha:
     bbd = np.log(1 - np.subtract(1,ro)/a) / np.log(1 - 1/a)

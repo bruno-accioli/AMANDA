@@ -100,7 +100,8 @@ def run(dataValues, dataLabels, datasetDescription, isBinaryClassification, isIm
             algorithmName, accuracies, CoreX, CoreY, arrX, arrY, arrUt, arrYt, arrClf, arrPredicted = e.method.start(
                 dataValues=dataValues, dataLabels=dataLabels, classes=classes, densityFunction=e.densityFunction, 
                 batches=batches, sizeOfBatch = sizeOfBatch, initialLabeledData=labeledData, excludingPercentage=e.excludingPercentage, 
-                K_variation=e.K_variation, clfName=e.clfName, poolSize=poolSize, isBatchMode=isBatchMode)
+                K_variation=e.K_variation, clfName=e.clfName, poolSize=poolSize, isBatchMode=isBatchMode,
+                distanceMetric=e.distanceMetric, beta=e.beta)
             end = timer()
             averageAccuracy = np.mean(accuracies)
 

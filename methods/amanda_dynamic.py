@@ -3,7 +3,7 @@ from source import classifiers
 from source import metrics
 from source import util
 from scipy.spatial.distance import euclidean
-
+import warnings
 
 
 def split_list(alist, wanted_parts=1):
@@ -33,8 +33,26 @@ _SQRT2 = np.sqrt(2)
 def hellinger(p, q):
     return euclidean(np.sqrt(p), np.sqrt(q)) / _SQRT2
 
+def BC(p,q):
+    return np.sqrt(np.multiply(p,q)).sum()
 
-def cuttingPercentage(Xt_1, Xt, t=None):
+def BBD(bc, beta):
+    return np.log(1 - np.subtract(1,bc)/beta) / np.log(1 - 1/beta)
+
+def cuttingPercentage(Xt_1, Xt, distanceMetric, beta=None, t=None):
+    if distanceMetric == 'Hellinger':
+        return cuttingPercentageHellinger(Xt_1, Xt, t)
+    
+    if distanceMetric == 'Hellinger2':
+        return cuttingPercentageHellinger2(Xt_1, Xt, t)
+    
+    if distanceMetric == 'BBD':
+        return cuttingPercentageBBD(Xt_1, Xt, beta, t)
+    
+    return ValueError("""Supported Distance Metrics are ['BBD', 'Hellinger', 'Hellinger2']. 
+                      Received distanceMetric = {}""".format(distanceMetric))
+    
+def cuttingPercentageHellinger(Xt_1, Xt, t=None):
     res = []
     
     for i in range(Xt_1.shape[1]):
@@ -51,12 +69,90 @@ def cuttingPercentage(Xt_1, Xt, t=None):
     #if alpha < 0:
     #    alpha *= -1
     
+    # Sanity Check
+    validation = [True if (i>1 or i<0) else False for i in res]
+    filtered = [i for (i, v) in zip(res, validation) if v]
+    
+    if True in validation:
+        warnings.warn("t={} : Hellinger1 Invalid distance value(s): {}".format(t,filtered))
+        
+    if (alpha > 1 or alpha < 0):
+        warnings.warn("t={} : Hellinger1 Invalid calculated alpha value: {}".format(t,alpha))
+    
     if alpha > 0.9:
         alpha = 0.9
     elif alpha < 0.5:
         alpha = 0.5
     return 1-alpha #percentage of similarity
 
+def cuttingPercentageHellinger2(Xt_1, Xt, t=None):
+    res = []
+    NXt_1 = len(Xt_1)    
+    NXt = len(Xt)    
+    bins = int(np.sqrt(NXt_1)) 
+    for i in range(Xt_1.shape[1]):
+        P = Xt_1[:, i]
+        Q = Xt[:, i]
+        hP = np.histogram(P, bins=bins)
+        hQ = np.histogram(Q, bins=hP[1])
+        res.append(hellinger(hP[0] / NXt_1, hQ[0] / NXt))
+    
+    H = np.mean(res)
+#    alpha = 1-H
+    #print(t, H, alpha)
+    #if alpha < 0:
+    #    alpha *= -1
+    
+    # Sanity Check
+    validation = [True if (i>1 or i<0) else False for i in res]
+    filtered = [i for (i, v) in zip(res, validation) if v]
+    
+    if True in validation:
+        warnings.warn("t={} : Hellinger2 Invalid distance value(s): {}".format(t,filtered))
+        
+    if (H > 1 or H < 0):
+        warnings.warn("t={} : Hellinger2 Invalid calculated distance value: {}".format(t,H))        
+    
+    if H > 0.9:
+        H = 0.9
+    elif H < 0.5:
+        H = 0.5
+    return 1-H #percentage of similarity
+
+def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
+    bcs = []
+    NXt_1 = len(Xt_1)    
+    NXt = len(Xt)
+    bins = int(np.sqrt(NXt_1))    
+    for i in range(Xt_1.shape[1]):
+        P = Xt_1[:, i]
+        Q = Xt[:, i]        
+        hP = np.histogram(P, bins=bins)
+        hQ = np.histogram(Q, bins=hP[1])
+        bcs.append(BC(hP[0] / NXt_1, hQ[0] / NXt))
+    
+    bc = np.mean(bcs)
+    b = BBD(bc, beta)
+#    alpha = 1-b
+    #print(t, H, alpha)
+    #if alpha < 0:
+    #    alpha *= -1
+    
+    # Sanity Check
+    validation = [True if (i>1 or i<0) else False for i in bcs]
+    filtered = [i for (i, v) in zip(bcs, validation) if v]
+    
+    if True in validation:
+        warnings.warn("t={} : BBD Invalid Bhatacheryya Coefficient value(s): {}".format(t,filtered))
+        
+    if (b > 1 or b < 0):
+        warnings.warn("t={} : BBD Invalid calculated distance value: {}".format(t,b))        
+    
+    if b > 0.9:
+        b = 0.9
+    elif b < 0.5:
+        b = 0.5
+    return 1-b #percentage of similarity
 
 def cuttingPercentage2(Xt_1, Xt, t=None):
     res = []
@@ -149,9 +245,16 @@ def start(**kwargs):
     densityFunction = kwargs["densityFunction"]
     poolSize = kwargs["poolSize"]
     isBatchMode = kwargs["isBatchMode"]
+    distanceMetric = kwargs['distanceMetric']
     
-    print("METHOD: {} as classifier and {} and Hellinger distance as dynamic CSE".format(clfName, densityFunction))
+    if distanceMetric == 'BBD':
+        beta = kwargs["beta"]
+    else:
+        beta = None
+    
+    print("METHOD: {} as classifier and {} and {} distance as dynamic CSE".format(clfName, densityFunction, distanceMetric))
     usePCA=False
+    arrAlphas = []
     arrAcc = []
     arrX = []
     arrY = []
@@ -190,7 +293,8 @@ def start(**kwargs):
             arrAcc.append(metrics.evaluate(yt, predicted))
             
             # ***** Box 4 *****
-            excludingPercentage = cuttingPercentage(X, Ut, t)
+            excludingPercentage = cuttingPercentage(X, Ut, distanceMetric, beta, t)
+            arrAlphas.append(excludingPercentage)
             #excludingPercentageByClass, reset = cuttingPercentageByClass(X, Ut, y, predicted, classes, t)
             allInstances = []
             allLabels = []
@@ -277,4 +381,15 @@ def start(**kwargs):
         arrPredicted = split_list(arrPredicted, batches)
 
     # returns accuracy array and last selected points
-    return "AMANDA (Dynamic)", arrAcc, X, y, arrX, arrY, arrUt, arrYt, arrClf, arrPredicted
+    if distanceMetric == 'BBD':
+        clfMethod = "AMANDA-DCP {} - \u03B2 = {:.3f}".format(distanceMetric, beta)
+    else:
+        clfMethod = "AMANDA-DCP {}".format(distanceMetric)
+    
+    print("{} | Mean Alpha={:.2f} | Std ALpha={:.2f}".format(clfMethod, 
+          np.mean(np.subtract(1,arrAlphas)), 
+          np.std(np.subtract(1,arrAlphas))))  
+    
+    print(arrAlphas)
+      
+    return clfMethod, arrAcc, X, y, arrX, arrY, arrUt, arrYt, arrClf, arrPredicted
