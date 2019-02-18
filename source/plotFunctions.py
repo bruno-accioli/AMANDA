@@ -233,7 +233,7 @@ def plotAccuracyCurves(listOfAccuracies, listOfMethods):
         ax.plot(c, acc)
 
     plt.title("Accuracy curve")
-    plt.legend(listOfMethods)
+    plt.legend(listOfMethods, bbox_to_anchor = (1.05,1))
     plt.yticks([0,10,20,30,40,50,60,70,80,90,100])
     plt.xticks(range(0, limit, 10))
     plt.ylabel("Accuracy")
@@ -249,7 +249,7 @@ def plotBars(listOfTimes, listOfMethods):
         ax.bar(l, listOfTimes[l], label=listOfMethods[l], align='center')
 
     plt.title("Execution time to perform all stream")
-    plt.legend(listOfMethods)
+    plt.legend(listOfMethods, bbox_to_anchor = (1.05,1))
     plt.xlabel("Methods")
     plt.ylabel("Execution time")
     plt.xticks(range(len(listOfTimes)))

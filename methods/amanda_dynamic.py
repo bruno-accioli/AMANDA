@@ -98,7 +98,7 @@ def cuttingPercentageHellinger2(Xt_1, Xt, t=None):
         res.append(hellinger(hP[0] / NXt_1, hQ[0] / NXt))
     
     H = np.mean(res)
-#    alpha = 1-H
+    alpha = 1-H
     #print(t, H, alpha)
     #if alpha < 0:
     #    alpha *= -1
@@ -110,14 +110,14 @@ def cuttingPercentageHellinger2(Xt_1, Xt, t=None):
     if True in validation:
         warnings.warn("t={} : Hellinger2 Invalid distance value(s): {}".format(t,filtered))
         
-    if (H > 1 or H < 0):
-        warnings.warn("t={} : Hellinger2 Invalid calculated distance value: {}".format(t,H))        
+    if (alpha > 1 or alpha < 0):
+        warnings.warn("t={} : Hellinger2 Invalid calculated alpha value: {}".format(t,H))        
     
-    if H > 0.9:
-        H = 0.9
-    elif H < 0.5:
-        H = 0.5
-    return 1-H #percentage of similarity
+    if alpha > 0.9:
+        alpha = 0.9
+    elif alpha < 0.5:
+        alpha = 0.5
+    return 1-alpha #percentage of similarity
 
 def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
     bcs = []
@@ -133,7 +133,7 @@ def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
     
     bc = np.mean(bcs)
     b = BBD(bc, beta)
-#    alpha = 1-b
+    alpha = 1-b
     #print(t, H, alpha)
     #if alpha < 0:
     #    alpha *= -1
@@ -145,14 +145,14 @@ def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
     if True in validation:
         warnings.warn("t={} : BBD Invalid Bhatacheryya Coefficient value(s): {}".format(t,filtered))
         
-    if (b > 1 or b < 0):
-        warnings.warn("t={} : BBD Invalid calculated distance value: {}".format(t,b))        
+    if (alpha > 1 or alpha < 0):
+        warnings.warn("t={} : BBD Invalid calculated alpha value: {}".format(t,b))        
     
-    if b > 0.9:
-        b = 0.9
-    elif b < 0.5:
-        b = 0.5
-    return 1-b #percentage of similarity
+    if alpha > 0.9:
+        alpha = 0.9
+    elif alpha < 0.5:
+        alpha = 0.5
+    return 1-alpha #percentage of similarity
 
 def cuttingPercentage2(Xt_1, Xt, t=None):
     res = []
@@ -386,10 +386,10 @@ def start(**kwargs):
     else:
         clfMethod = "AMANDA-DCP {}".format(distanceMetric)
     
-    print("{} | Mean Alpha={:.2f} | Std ALpha={:.2f}".format(clfMethod, 
-          np.mean(np.subtract(1,arrAlphas)), 
-          np.std(np.subtract(1,arrAlphas))))  
+    print("{} | Mean keeping percentage={:.2f} | Std keeping percentage={:.2f}".format(clfMethod, 
+          np.mean(arrAlphas), 
+          np.std(arrAlphas)))  
     
-    print(arrAlphas)
+#    print(arrAlphas)
       
     return clfMethod, arrAcc, X, y, arrX, arrY, arrUt, arrYt, arrClf, arrPredicted
