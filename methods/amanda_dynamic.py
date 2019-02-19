@@ -39,7 +39,8 @@ def BC(p,q):
 def BBD(bc, beta):
     return np.log(1 - np.subtract(1,bc)/beta) / np.log(1 - 1/beta)
 
-def cuttingPercentage(Xt_1, Xt, distanceMetric, beta=None, t=None):
+def cuttingPercentage(Xt_1, Xt, distanceMetric, epsilons=[], hds=[], alpha=None, 
+                      beta=None, t=None):
     if distanceMetric == 'Hellinger':
         return cuttingPercentageHellinger(Xt_1, Xt, t)
     
@@ -48,6 +49,9 @@ def cuttingPercentage(Xt_1, Xt, distanceMetric, beta=None, t=None):
     
     if distanceMetric == 'BBD':
         return cuttingPercentageBBD(Xt_1, Xt, beta, t)
+    
+    if distanceMetric == 'HDDDM':
+        return cuttingPercentageHDDDM(Xt_1, Xt, epsilons, hds, alpha)
     
     return ValueError("""Supported Distance Metrics are ['BBD', 'Hellinger', 'Hellinger2']. 
                       Received distanceMetric = {}""".format(distanceMetric))
@@ -153,6 +157,55 @@ def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
     elif alpha < 0.5:
         alpha = 0.5
     return 1-alpha #percentage of similarity
+
+def cuttingPercentageHDDDM(Xt_1, Xt, epsilons, hds, alpha, k=0.1, gamma=1, t=None):
+    res = []
+    NXt_1 = len(Xt_1)    
+    NXt = len(Xt)    
+    bins = int(np.sqrt(NXt_1)) 
+    for i in range(Xt_1.shape[1]):
+        P = Xt_1[:, i]
+        Q = Xt[:, i]
+        hP = np.histogram(P, bins=bins)
+        hQ = np.histogram(Q, bins=hP[1])
+        res.append(hellinger(hP[0] / NXt_1, hQ[0] / NXt))
+    
+    H = np.mean(res)
+    if hds:
+        episilon = abs(H-hds[-1])
+        epsilons.append(episilon)
+        hds.append(H)
+        
+        episilon_mean = np.mean(epsilons)
+        episilon_std = np.std(epsilons)
+        
+        beta = episilon_mean + gamma * episilon_std
+    else:
+        hds.append(H)
+        episilon = 0
+        beta = np.inf
+    
+    alpha = 1-alpha
+    if (episilon > beta): #drift happened
+        alpha = 0.9
+        hds = [hds[-1]]
+        epsilons = []
+    else:
+        alpha = alpha - k
+        if alpha < 0.5:
+            alpha = 0.5
+    
+    
+    #alpha = 1-H
+    #print(t, H, alpha)
+    #if alpha < 0:
+    #    alpha *= -1
+        
+#    if alpha > 0.9:
+#        alpha = 0.9
+#    elif alpha < 0.5:
+#        alpha = 0.5
+    return 1-alpha, hds, epsilons
 
 def cuttingPercentage2(Xt_1, Xt, t=None):
     res = []
@@ -262,6 +315,9 @@ def start(**kwargs):
     arrYt = []
     arrClf = []
     arrPredicted = []
+    epsilons = [] 
+    hds = []
+    excludingPercentage = 0.5
     initialDataLength = 0
     finalDataLength = initialLabeledData #round((initialLabeledDataPerc)*sizeOfBatch)
     # ***** Box 1 *****
@@ -293,7 +349,14 @@ def start(**kwargs):
             arrAcc.append(metrics.evaluate(yt, predicted))
             
             # ***** Box 4 *****
-            excludingPercentage = cuttingPercentage(X, Ut, distanceMetric, beta, t)
+            if distanceMetric != 'HDDDM':
+                excludingPercentage = cuttingPercentage(X, Ut, distanceMetric, 
+                                                        epsilons, hds, 
+                                                        excludingPercentage, beta, t)
+            else:
+                excludingPercentage, hds, epsilons = cuttingPercentage(X, Ut, distanceMetric, 
+                                                        epsilons, hds, 
+                                                        excludingPercentage, beta, t)
             arrAlphas.append(excludingPercentage)
             #excludingPercentageByClass, reset = cuttingPercentageByClass(X, Ut, y, predicted, classes, t)
             allInstances = []
