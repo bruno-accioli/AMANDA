@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from source import classifiers
 from source import metrics
 from source import util
@@ -37,7 +38,10 @@ def BC(p,q):
     return np.sqrt(np.multiply(p,q)).sum()
 
 def BBD(bc, beta):
-    return np.log(1 - np.subtract(1,bc)/beta) / np.log(1 - 1/beta)
+    if beta == 10:
+        return -10 * math.log((9 + bc)/10, 2.867971990792441)
+    else:
+        return np.log(1 - np.subtract(1,bc)/beta) / np.log(1 - 1/beta)
 
 def cuttingPercentage(Xt_1, Xt, distanceMetric, epsilons=[], hds=[], alpha=None, 
                       beta=None, t=None):
@@ -74,14 +78,14 @@ def cuttingPercentageHellinger(Xt_1, Xt, t=None):
     #    alpha *= -1
     
     # Sanity Check
-    validation = [True if (i>1 or i<0) else False for i in res]
-    filtered = [i for (i, v) in zip(res, validation) if v]
-    
-    if True in validation:
-        warnings.warn("t={} : Hellinger1 Invalid distance value(s): {}".format(t,filtered))
-        
-    if (alpha > 1 or alpha < 0):
-        warnings.warn("t={} : Hellinger1 Invalid calculated alpha value: {}".format(t,alpha))
+#    validation = [True if (i>1 or i<0) else False for i in res]
+#    filtered = [i for (i, v) in zip(res, validation) if v]
+#    
+#    if True in validation:
+#        warnings.warn("t={} : Hellinger1 Invalid distance value(s): {}".format(t,filtered))
+#        
+#    if (alpha > 1 or alpha < 0):
+#        warnings.warn("t={} : Hellinger1 Invalid calculated alpha value: {}".format(t,alpha))
     
     if alpha > 0.9:
         alpha = 0.9
@@ -108,15 +112,15 @@ def cuttingPercentageHellinger2(Xt_1, Xt, t=None):
     #    alpha *= -1
     
     # Sanity Check
-    validation = [True if (i>1 or i<0) else False for i in res]
-    filtered = [i for (i, v) in zip(res, validation) if v]
-    
-    if True in validation:
-        warnings.warn("t={} : Hellinger2 Invalid distance value(s): {}".format(t,filtered))
-        
-    if (alpha > 1 or alpha < 0):
-        warnings.warn("t={} : Hellinger2 Invalid calculated alpha value: {}".format(t,H))        
-    
+#    validation = [True if (i>1 or i<0) else False for i in res]
+#    filtered = [i for (i, v) in zip(res, validation) if v]
+#    
+#    if True in validation:
+#        warnings.warn("t={} : Hellinger2 Invalid distance value(s): {}".format(t,filtered))
+#        
+#    if (alpha > 1 or alpha < 0):
+#        warnings.warn("t={} : Hellinger2 Invalid calculated alpha value: {}".format(t,H))        
+#    
     if alpha > 0.9:
         alpha = 0.9
     elif alpha < 0.5:
@@ -143,14 +147,14 @@ def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
     #    alpha *= -1
     
     # Sanity Check
-    validation = [True if (i>1 or i<0) else False for i in bcs]
-    filtered = [i for (i, v) in zip(bcs, validation) if v]
-    
-    if True in validation:
-        warnings.warn("t={} : BBD Invalid Bhatacheryya Coefficient value(s): {}".format(t,filtered))
-        
-    if (alpha > 1 or alpha < 0):
-        warnings.warn("t={} : BBD Invalid calculated alpha value: {}".format(t,b))        
+#    validation = [True if (i>1 or i<0) else False for i in bcs]
+#    filtered = [i for (i, v) in zip(bcs, validation) if v]
+#    
+#    if True in validation:
+#        warnings.warn("t={} : BBD Invalid Bhatacheryya Coefficient value(s): {}".format(t,filtered))
+#        
+#    if (alpha > 1 or alpha < 0):
+#        warnings.warn("t={} : BBD Invalid calculated alpha value: {}".format(t,b))        
     
     if alpha > 0.9:
         alpha = 0.9

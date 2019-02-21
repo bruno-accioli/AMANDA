@@ -289,12 +289,15 @@ def plotBars3(listOfAccuracies, listOfMethods):
 
 
 def plotBars4(baseline, listOfAccuracies, listOfMethods):
+    sortedAcc =  sorted(listOfAccuracies, reverse=True)
+    rank = [sortedAcc.index(x)+1 for x in listOfAccuracies]
     
     for l in range(1,len(listOfAccuracies)):    
         ax = plt.axes()
         #ax.bar(l, (listOfAccuracies[l]-baseline)/listOfAccuracies[l])
         ax.bar(l, ((listOfAccuracies[l]-baseline)/baseline)*100)
-        print('Error reduction:',((listOfAccuracies[l]-baseline)/baseline)*100)
+        print('Pos {} - Error reduction ({}):{}'.format(rank[l], 
+              listOfMethods[l],((listOfAccuracies[l]-baseline)/baseline)*100))
 
     plt.title("Reduction Percentage Error")
     plt.xlabel("Methods")
@@ -303,4 +306,4 @@ def plotBars4(baseline, listOfAccuracies, listOfMethods):
     plt.xticks(range(1, len(listOfAccuracies)), listOfMethods[1:])
     plt.xticks(rotation=90)
     plt.grid()
-    plt.show()
+    plt.show()  
