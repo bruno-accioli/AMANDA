@@ -4,6 +4,7 @@ from source import util
 from source import classifiers
 from sklearn.base import BaseEstimator, ClassifierMixin
 from scipy.spatial.distance import euclidean
+import math
 
 
 
@@ -34,8 +35,33 @@ _SQRT2 = np.sqrt(2)
 def hellinger(p, q):
     return euclidean(np.sqrt(p), np.sqrt(q)) / _SQRT2
 
+def BC(p,q):
+    return np.sqrt(np.multiply(p,q)).sum()
 
-def cuttingPercentage(Xt_1, Xt, t=None):
+def BBD(bc, beta):
+    if beta == 10:
+        return -10 * math.log((9 + bc)/10, 2.867971990792441)
+    else:
+        return np.log(1 - np.subtract(1,bc)/beta) / np.log(1 - 1/beta)
+
+def cuttingPercentage(Xt_1, Xt, distanceMetric, epsilons=[], hds=[], alpha=None, 
+                      beta=None, t=None):
+    if distanceMetric == 'Hellinger':
+        return cuttingPercentageHellinger(Xt_1, Xt, t)
+    
+    if distanceMetric == 'Hellinger2':
+        return cuttingPercentageHellinger2(Xt_1, Xt, t)
+    
+    if distanceMetric == 'BBD':
+        return cuttingPercentageBBD(Xt_1, Xt, beta, t)
+    
+    if distanceMetric == 'HDDDM':
+        return cuttingPercentageHDDDM(Xt_1, Xt, epsilons, hds, alpha)
+    
+    return ValueError("""Supported Distance Metrics are ['BBD', 'Hellinger', 'Hellinger2', 'HDDDM']. 
+                      Received distanceMetric = {}""".format(distanceMetric))
+
+def cuttingPercentageHellinger(Xt_1, Xt, t=None):
     res = []
     
     for i in range(Xt_1.shape[1]):
@@ -47,20 +73,144 @@ def cuttingPercentage(Xt_1, Xt, t=None):
         res.append(hellinger(hP[1], hQ[1]))
     
     H = np.mean(res)
-    #alpha = _SQRT2-H #best results
-    alpha = (_SQRT2-H)/_SQRT2
+    alpha = _SQRT2-H
+    #print(t, H, alpha)
+    #if alpha < 0:
+    #    alpha *= -1
     
-    #correcting a bug of negative values
-    if alpha < 0:
-        alpha *= -1
-
-    #print(t, _SQRT2-H, alpha)
-
+    # Sanity Check
+#    validation = [True if (i>1 or i<0) else False for i in res]
+#    filtered = [i for (i, v) in zip(res, validation) if v]
+#    
+#    if True in validation:
+#        warnings.warn("t={} : Hellinger1 Invalid distance value(s): {}".format(t,filtered))
+#        
+#    if (alpha > 1 or alpha < 0):
+#        warnings.warn("t={} : Hellinger1 Invalid calculated alpha value: {}".format(t,alpha))
+    
     if alpha > 0.9:
         alpha = 0.9
     elif alpha < 0.5:
         alpha = 0.5
     return 1-alpha #percentage of similarity
+
+def cuttingPercentageHellinger2(Xt_1, Xt, t=None):
+    res = []
+    NXt_1 = len(Xt_1)    
+    NXt = len(Xt)    
+    bins = int(np.sqrt(NXt_1)) 
+    for i in range(Xt_1.shape[1]):
+        P = Xt_1[:, i]
+        Q = Xt[:, i]
+        hP = np.histogram(P, bins=bins)
+        hQ = np.histogram(Q, bins=hP[1])
+        res.append(hellinger(hP[0] / NXt_1, hQ[0] / NXt))
+    
+    H = np.mean(res)
+    alpha = 1-H
+    #print(t, H, alpha)
+    #if alpha < 0:
+    #    alpha *= -1
+    
+    # Sanity Check
+#    validation = [True if (i>1 or i<0) else False for i in res]
+#    filtered = [i for (i, v) in zip(res, validation) if v]
+#    
+#    if True in validation:
+#        warnings.warn("t={} : Hellinger2 Invalid distance value(s): {}".format(t,filtered))
+#        
+#    if (alpha > 1 or alpha < 0):
+#        warnings.warn("t={} : Hellinger2 Invalid calculated alpha value: {}".format(t,H))        
+#    
+    if alpha > 0.9:
+        alpha = 0.9
+    elif alpha < 0.5:
+        alpha = 0.5
+    return 1-alpha #percentage of similarity
+
+def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
+    bcs = []
+    NXt_1 = len(Xt_1)    
+    NXt = len(Xt)
+    bins = int(np.sqrt(NXt_1))    
+    for i in range(Xt_1.shape[1]):
+        P = Xt_1[:, i]
+        Q = Xt[:, i]        
+        hP = np.histogram(P, bins=bins)
+        hQ = np.histogram(Q, bins=hP[1])
+        bcs.append(BC(hP[0] / NXt_1, hQ[0] / NXt))
+    
+    bc = np.mean(bcs)
+    b = BBD(bc, beta)
+    alpha = 1-b
+    #print(t, H, alpha)
+    #if alpha < 0:
+    #    alpha *= -1
+    
+    # Sanity Check
+#    validation = [True if (i>1 or i<0) else False for i in bcs]
+#    filtered = [i for (i, v) in zip(bcs, validation) if v]
+#    
+#    if True in validation:
+#        warnings.warn("t={} : BBD Invalid Bhatacheryya Coefficient value(s): {}".format(t,filtered))
+#        
+#    if (alpha > 1 or alpha < 0):
+#        warnings.warn("t={} : BBD Invalid calculated alpha value: {}".format(t,b))        
+    
+    if alpha > 0.9:
+        alpha = 0.9
+    elif alpha < 0.5:
+        alpha = 0.5
+    return 1-alpha #percentage of similarity
+
+def cuttingPercentageHDDDM(Xt_1, Xt, epsilons, hds, alpha, k=0.1, gamma=1, t=None):
+    res = []
+    NXt_1 = len(Xt_1)    
+    NXt = len(Xt)    
+    bins = int(np.sqrt(NXt_1)) 
+    for i in range(Xt_1.shape[1]):
+        P = Xt_1[:, i]
+        Q = Xt[:, i]
+        hP = np.histogram(P, bins=bins)
+        hQ = np.histogram(Q, bins=hP[1])
+        res.append(hellinger(hP[0] / NXt_1, hQ[0] / NXt))
+    
+    H = np.mean(res)
+    if hds:
+        episilon = abs(H-hds[-1])
+        epsilons.append(episilon)
+        hds.append(H)
+        
+        episilon_mean = np.mean(epsilons)
+        episilon_std = np.std(epsilons)
+        
+        beta = episilon_mean + gamma * episilon_std
+    else:
+        hds.append(H)
+        episilon = 0
+        beta = np.inf
+    
+    alpha = 1-alpha
+    if (episilon > beta): #drift happened
+        alpha = 0.9
+        hds = [hds[-1]]
+        epsilons = []
+    else:
+        alpha = alpha - k
+        if alpha < 0.5:
+            alpha = 0.5
+    
+    
+    #alpha = 1-H
+    #print(t, H, alpha)
+    #if alpha < 0:
+    #    alpha *= -1
+        
+#    if alpha > 0.9:
+#        alpha = 0.9
+#    elif alpha < 0.5:
+#        alpha = 0.5
+    return 1-alpha, hds, epsilons
 
 
 def cuttingPercentage3(Xt_1, Xt, t=None):
@@ -135,11 +285,12 @@ def cuttingPercentage2(Xt_1, Xt, t=None):
 
 class run(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, K=1, sizeOfBatch=100, batches=50, poolSize=100, isBatchMode=True, initialLabeledData=50, clfName='lp'):
+    def __init__(self, K=1, sizeOfBatch=100, batches=50, poolSize=100, isBatchMode=True, initialLabeledData=50, clfName='lp', distanceMetric='Hellinger', beta=None):
         self.sizeOfBatch = sizeOfBatch
         self.batches = batches
         self.initialLabeledData=initialLabeledData
         self.usePCA=False
+        self.distanceMetric = distanceMetric
         #used only by gmm and cluster-label process
         self.densityFunction='kde'
         self.K = K
@@ -147,10 +298,16 @@ class run(BaseEstimator, ClassifierMixin):
         self.poolSize = poolSize
         self.isBatchMode = isBatchMode
         
+        #used only by BBD distance metric
+        self.beta = beta
+        
         #print("{} excluding percecntage".format(excludingPercentage))    
     
     def get_params(self, deep=True):
-        return {"K":self.K, "sizeOfBatch":self.sizeOfBatch, "batches":self.batches, "poolSize":self.poolSize, "isBatchMode":self.isBatchMode, "clfName":self.clfName}
+        return {"K":self.K, "sizeOfBatch":self.sizeOfBatch, "batches":self.batches, 
+                "poolSize":self.poolSize, "isBatchMode":self.isBatchMode, 
+                "clfName":self.clfName, "distanceMetric":self.distanceMetric,
+                "beta":self.beta}
     
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
@@ -162,6 +319,9 @@ class run(BaseEstimator, ClassifierMixin):
         classes = list(set(dataLabels))
         initialDataLength = 0
         finalDataLength = self.initialLabeledData
+        excludingPercentage = 0.5
+        epsilons = [] 
+        hds = []
 
         # ***** Box 1 *****
         #Initial labeled data
@@ -182,7 +342,15 @@ class run(BaseEstimator, ClassifierMixin):
                 arrAcc.append(metrics.evaluate(yt, predicted))
 
                 # ***** Box 4 *****
-                excludingPercentage = cuttingPercentage(X, Ut, t)
+                #excludingPercentage = cuttingPercentage(X, Ut, t)
+                if self.distanceMetric != 'HDDDM':
+                    excludingPercentage = cuttingPercentage(X, Ut, self.distanceMetric, 
+                                                            epsilons, hds, 
+                                                            excludingPercentage, self.beta, t)
+                else:
+                    excludingPercentage, hds, epsilons = cuttingPercentage(X, Ut, self.distanceMetric, 
+                                                                            epsilons, hds, 
+                                                                            excludingPercentage, self.beta, t)
                 allInstances = []
                 allLabels = []
                 

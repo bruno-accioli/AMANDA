@@ -57,7 +57,7 @@ def cuttingPercentage(Xt_1, Xt, distanceMetric, epsilons=[], hds=[], alpha=None,
     if distanceMetric == 'HDDDM':
         return cuttingPercentageHDDDM(Xt_1, Xt, epsilons, hds, alpha)
     
-    return ValueError("""Supported Distance Metrics are ['BBD', 'Hellinger', 'Hellinger2']. 
+    return ValueError("""Supported Distance Metrics are ['BBD', 'Hellinger', 'Hellinger2', 'HDDDM']. 
                       Received distanceMetric = {}""".format(distanceMetric))
     
 def cuttingPercentageHellinger(Xt_1, Xt, t=None):

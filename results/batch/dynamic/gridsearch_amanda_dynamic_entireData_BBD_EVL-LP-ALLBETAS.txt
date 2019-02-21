@@ -1,0 +1,4 @@
+One Class Diagonal Translation. 2 Dimensional data.: 99.9736 using {'K': 5, 'batches': 100, 'beta': -0.001, 'clfName': 'LP', 'distanceMetric': 'BBD', 'initialLabeledData': 800, 'isBatchMode': True, 'poolSize': None, 'sizeOfBatch': 152} 
+One Class Horizontal Translation. 2 Dimensional data.: 99.65119999999997 using {'K': 4, 'batches': 100, 'beta': -0.5, 'clfName': 'LP', 'distanceMetric': 'BBD', 'initialLabeledData': 800, 'isBatchMode': True, 'poolSize': None, 'sizeOfBatch': 152} 
+Two Classes Diagonal Translation. 2 Dimensional data: 94.5529 using {'K': 11, 'batches': 100, 'beta': 1.001, 'clfName': 'LP', 'distanceMetric': 'BBD', 'initialLabeledData': 800, 'isBatchMode': True, 'poolSize': None, 'sizeOfBatch': 152} 
+Two Classes Horizontal Translation. 2 Dimensional data.: 86.22989999999999 using {'K': 12, 'batches': 100, 'beta': 1.001, 'clfName': 'LP', 'distanceMetric': 'BBD', 'initialLabeledData': 800, 'isBatchMode': True, 'poolSize': None, 'sizeOfBatch': 152} 
