@@ -327,7 +327,7 @@ def start(**kwargs):
     # ***** Box 1 *****
     #Initial labeled data
     X, y = util.loadLabeledData(dataValues, dataLabels, initialDataLength, finalDataLength, usePCA)
-    reset = True
+    reset = False
     if isBatchMode:
         for t in range(batches):
             #print("passo: ",t)

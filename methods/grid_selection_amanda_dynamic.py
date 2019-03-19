@@ -326,7 +326,7 @@ class run(BaseEstimator, ClassifierMixin):
         # ***** Box 1 *****
         #Initial labeled data
         X, y = util.loadLabeledData(dataValues, dataLabels, initialDataLength, finalDataLength, self.usePCA)
-        reset = True
+        reset = False
         if self.isBatchMode:
             for t in range(self.batches):
                 #print("passo: ",t)
