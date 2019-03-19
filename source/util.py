@@ -414,7 +414,7 @@ def compactingDataDensityBased2(densities, criteria, reverse=False):
 
     for k in densities:
         arrPdf = np.array(densities[k])
-        numSelected = int(np.floor(criteria*len(arrPdf)))
+        numSelected = int(np.floor(criteria*len(arrPdf[arrPdf>-1])))
         if reverse:
             ind = (arrPdf).argsort()[:numSelected]
         else:
