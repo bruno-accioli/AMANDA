@@ -20,6 +20,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.naive_bayes import MultinomialNB 
 from sklearn.naive_bayes import BernoulliNB
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 
 def pca(X, numComponents):
@@ -39,7 +42,7 @@ def kMeans(X, k):
 
 
 def labelPropagation(X, y, K):
-    return label_propagation.LabelSpreading(kernel='knn', n_neighbors=K, alpha=0.2).fit(X, y)
+    return label_propagation.LabelSpreading(kernel='knn', n_neighbors=K, alpha=0.9999999999999999).fit(X, y)
 
 
 def SGDClassifier(X, y):
