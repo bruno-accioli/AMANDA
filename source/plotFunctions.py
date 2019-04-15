@@ -83,6 +83,48 @@ def plotDistributionss(distributions):
 
     plt.show()
 
+def plotDistributionsTimesteps(instances, labels, timeSteps, markerSize=30,
+                               numberOfBtaches=100, figsize =(12,3)):
+    if instances.shape[1] != 2:
+        print("Instances must have 2 dimensions")
+        return
+
+    fig = plt.figure(figsize=figsize )
+    handles = []
+    colors = ['tomato', 'steelblue', 'mediumseagreen', 'khaki', 'mediumorchid']
+    markers = ['o', 'x', 's', 'v', 'd']
+    numberTimeSteps = len(timeSteps)
+    instancesPerBatch = int(len(instances) / numberOfBtaches)
+    XMax = np.max(instances[:,0]) + 1
+    XMin = np.min(instances[:,0]) - 1
+    YMax = np.max(instances[:,1]) + 1
+    YMin = np.min(instances[:,1]) - 1
+    
+    for t, n in zip(timeSteps, range(numberTimeSteps)):
+        startBatch = t * instancesPerBatch
+        endBatch = (t+1) * instancesPerBatch
+        batch = instances[startBatch:endBatch, :]
+        batchLabels = labels[startBatch:endBatch]
+        ax = fig.add_subplot(1, numberTimeSteps, n+1)
+        
+        indexesByClass = dict()
+        for c in np.unique(labels):
+            indexesByClass[c] = np.where(batchLabels == c)
+    
+        for c, i in zip(indexesByClass.keys(), range(len(indexesByClass))):
+            indexes = indexesByClass[c]
+            handles.append(ax.scatter(batch[indexes, 0], batch[indexes, 1], 
+                                      color=colors[i], s=markerSize,
+                                      marker=markers[i], edgecolor='none',
+                                      zorder=3))
+            plt.xlim(XMin, XMax)
+            plt.ylim(YMin, YMax)
+            ax.tick_params(axis=u'both', which=u'both', labelsize=0,
+                           length=0, grid_alpha=0.5)
+            plt.grid(True, zorder=1)
+
+    #ax.legend(handles, classes)
+    plt.show()
 
 def plot(X, y, coreX, coreY, t):
     classes = list(set(y))
