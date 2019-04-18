@@ -113,4 +113,4 @@ def start(**kwargs):
         arrYt = split_list(arrYt, batches)
         arrPredicted = split_list(arrPredicted, batches)
     
-    return "Sliding SSL", arrAcc, X, y, arrX, arrY, arrUt, arrYt, arrClf, arrPredicted
+    return "Janela Deslizante", arrAcc, X, y, arrX, arrY, arrUt, arrYt, arrClf, arrPredicted

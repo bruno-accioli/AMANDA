@@ -58,7 +58,7 @@ def plotAccuracy(arr, steps, label):
     plt.yticks(range(0, 101, 10))
     plt.xticks(range(0, steps+1, 10))
     plt.title(label)
-    plt.ylabel("Accuracy")
+    plt.ylabel("Acurácia")
     plt.xlabel("Step")
     plt.grid()
     plt.show()
@@ -220,9 +220,9 @@ def plot2(X, y, t, classes):
 
 
 def finalEvaluation(arrAcc, steps, label):
-    print("Average Accuracy: ", np.mean(arrAcc))
-    print("Standard Deviation: ", np.std(arrAcc))
-    print("Variance: ", np.std(arrAcc)**2)
+    print("Acurácia Média: ", np.mean(arrAcc))
+    print("Desvio Padrão: ", np.std(arrAcc))
+    print("Variância: ", np.std(arrAcc)**2)
     plotAccuracy(arrAcc, steps, label)
 
 
@@ -252,9 +252,9 @@ def plotBoxplot(mode, data, labels):
     plt.xticks(rotation=90)
 
     if mode == 'acc':
-        plt.title("Accuracy - Boxplot")
+        plt.title("Acurácia - Boxplot")
         #plt.xlabel('step (s)')
-        plt.ylabel('Accuracy')
+        plt.ylabel('Acurácia')
     elif mode == 'mcc':
         plt.title('Mathews Correlation Coefficient - Boxplot')
         plt.ylabel("Mathews Correlation Coefficient")
@@ -274,11 +274,11 @@ def plotAccuracyCurves(listOfAccuracies, listOfMethods):
         ax = plt.axes()
         ax.plot(c, acc)
 
-    plt.title("Accuracy curve")
+    plt.title("Curva de Acurácia")
     plt.legend(listOfMethods, bbox_to_anchor = (1.05,1))
     plt.yticks([0,10,20,30,40,50,60,70,80,90,100])
     plt.xticks(range(0, limit, 10))
-    plt.ylabel("Accuracy")
+    plt.ylabel("Acurácia")
     plt.xlabel("Step")
     plt.grid()
     plt.show()
@@ -290,10 +290,10 @@ def plotBars(listOfTimes, listOfMethods):
         ax = plt.axes()
         ax.bar(l, listOfTimes[l], label=listOfMethods[l], align='center')
 
-    plt.title("Execution time to perform all stream")
+    plt.title("Tempo de Processamento total")
     plt.legend(listOfMethods, bbox_to_anchor = (1.05,1))
-    plt.xlabel("Methods")
-    plt.ylabel("Execution time")
+    plt.xlabel("Métodos")
+    plt.ylabel("Tempo de execução")
     plt.xticks(range(len(listOfTimes)))
     plt.show()
 
@@ -304,9 +304,9 @@ def plotBars2(listOfTimes, listOfMethods):
         ax = plt.axes()
         ax.bar(l, listOfTimes[l])
 
-    plt.title("Average Accuracy")
-    plt.xlabel("Methods")
-    plt.ylabel("Accuracy")
+    plt.title("Acurácia Média")
+    plt.xlabel("Métodos")
+    plt.ylabel("Acurácia")
     plt.yticks(range(0, 101, 10))
     plt.xticks(range(len(listOfTimes)), listOfMethods)
     plt.xticks(rotation=90)
@@ -320,9 +320,9 @@ def plotBars3(listOfAccuracies, listOfMethods):
         ax = plt.axes()
         ax.bar(l, 100-listOfAccuracies[l])
 
-    plt.title("Average Error")
-    plt.xlabel("Methods")
-    plt.ylabel("Error")
+    plt.title("Erro Médio")
+    plt.xlabel("Métodos")
+    plt.ylabel("Erro")
     #plt.yticks(range(0, 101, 10))
     plt.xticks(range(len(listOfAccuracies)), listOfMethods)
     plt.xticks(rotation=90)
@@ -338,12 +338,12 @@ def plotBars4(baseline, listOfAccuracies, listOfMethods):
         ax = plt.axes()
         #ax.bar(l, (listOfAccuracies[l]-baseline)/listOfAccuracies[l])
         ax.bar(l, ((listOfAccuracies[l]-baseline)/baseline)*100)
-        print('Pos {} - Error reduction ({}):{}'.format(rank[l], 
+        print('Pos {} - Redução do Erro ({}):{}'.format(rank[l], 
               listOfMethods[l],((listOfAccuracies[l]-baseline)/baseline)*100))
 
-    plt.title("Reduction Percentage Error")
-    plt.xlabel("Methods")
-    plt.ylabel("% Error under baseline (Static SSL)")
+    plt.title("Porcentagem de Redução do Erro")
+    plt.xlabel("Métodos")
+    plt.ylabel("% Erro comparado com baseline (Estático)")
     #plt.yticks(range(0, 101, 10))
     plt.xticks(range(1, len(listOfAccuracies)), listOfMethods[1:])
     plt.xticks(rotation=90)
