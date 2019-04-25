@@ -18,7 +18,7 @@ def plotDistributions(distributions):
         #reducing to 2-dimensional data
         x=classifiers.pca(X, 2)
 
-        handles.append(ax.scatter(x[:, 0], x[:, 1], color=colors[i], s=5, edgecolor='none'))
+        handles.append(ax.scatter(x[:, 0], x[:, 1], color=colors[i], s=5, edgecolor='none', zorder=2))
         i+=1
 
     ax.legend(handles, classes)
@@ -54,13 +54,13 @@ def plotAccuracy(arr, steps, label):
     fig = plt.figure()
     fig.add_subplot(122)
     ax = plt.axes()
-    ax.plot(c, arr, 'k')
+    ax.plot(c, arr, 'k', zorder=2)
     plt.yticks(range(0, 101, 10))
     plt.xticks(range(0, steps+1, 10))
     plt.title(label)
     plt.ylabel("Acurácia")
     plt.xlabel("Step")
-    plt.grid()
+    plt.grid(zorder=1, alpha=0.5)
     plt.show()
 
 
@@ -147,7 +147,7 @@ def plot(X, y, coreX, coreY, t):
         corePoints = coreX[np.where(coreY==cl)[0]]
         coreX1 = corePoints[:,0]
         coreX2 = corePoints[:,1]
-        handles.append(ax.scatter(coreX1, coreX2, c = colors[color]))
+        handles.append(ax.scatter(coreX1, coreX2, c = colors[color], zorder=2))
         #labels
         classLabels.append('Class {}'.format(cl))
         classLabels.append('Core {}'.format(cl))
@@ -180,7 +180,7 @@ def plotAnimation(i):
         corePoints = coreX[np.where(coreY==cl)[0]]
         coreX1 = corePoints[:,0]
         coreX2 = corePoints[:,1]
-        handles.append(ax.scatter(coreX1, coreX2, c = colors[color]))
+        handles.append(ax.scatter(coreX1, coreX2, c = colors[color], zorder=2))
         #labels
         classLabels.append('Class {}'.format(cl))
         classLabels.append('Core {}'.format(cl))
@@ -207,7 +207,7 @@ def plot2(X, y, t, classes):
         points = X[np.where(y==cl)[0]]
         x1 = points[:,0]
         x2 = points[:,1]
-        handles.append(ax.scatter(x1, x2, c = colors[color]))
+        handles.append(ax.scatter(x1, x2, c = colors[color], zorder=2))
         #core support points
         color+=1
         #labels
@@ -232,7 +232,7 @@ def plotF1(arrF1, steps, label):
     fig = plt.figure()
     fig.add_subplot(122)
     ax = plt.axes()
-    ax.plot(c, arrF1, 'k')
+    ax.plot(c, arrF1, 'k', zorder=2)
     plt.yticks([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
     if steps > 10:
         plt.xticks(range(1, steps+1, 10))
@@ -241,14 +241,14 @@ def plotF1(arrF1, steps, label):
     plt.title(label)
     plt.ylabel("F1")
     plt.xlabel("Step")
-    plt.grid()
+    plt.grid(zorder=1, alpha=0.5)
     plt.show()
 
 
 def plotBoxplot(mode, data, labels):
     fig = plt.figure()
     fig.add_subplot(111)
-    plt.boxplot(data, labels=labels)
+    plt.boxplot(data, labels=labels, zorder=2)
     plt.xticks(rotation=90)
 
     if mode == 'acc':
@@ -272,7 +272,7 @@ def plotAccuracyCurves(listOfAccuracies, listOfMethods):
         acc = np.array(acc)
         c = range(len(acc))
         ax = plt.axes()
-        ax.plot(c, acc)
+        ax.plot(c, acc, zorder=2)
 
     plt.title("Curva de Acurácia")
     plt.legend(listOfMethods, bbox_to_anchor = (1.05,1))
@@ -280,7 +280,7 @@ def plotAccuracyCurves(listOfAccuracies, listOfMethods):
     plt.xticks(range(0, limit, 10))
     plt.ylabel("Acurácia")
     plt.xlabel("Step")
-    plt.grid()
+    plt.grid(zorder=1, alpha=0.5)
     plt.show()
 
 
@@ -288,13 +288,14 @@ def plotBars(listOfTimes, listOfMethods):
     
     for l in range(len(listOfTimes)):    
         ax = plt.axes()
-        ax.bar(l, listOfTimes[l], label=listOfMethods[l], align='center')
+        ax.bar(l, listOfTimes[l], label=listOfMethods[l], align='center', zorder=2)
 
     plt.title("Tempo de Processamento total")
-    plt.legend(listOfMethods, bbox_to_anchor = (1.05,1))
+    plt.legend(listOfMethods, bbox_to_anchor = (1.6,1))
     plt.xlabel("Métodos")
     plt.ylabel("Tempo de execução")
     plt.xticks(range(len(listOfTimes)))
+    plt.grid(zorder=1, alpha=0.5)
     plt.show()
 
 
@@ -302,7 +303,7 @@ def plotBars2(listOfTimes, listOfMethods):
     
     for l in range(len(listOfTimes)):    
         ax = plt.axes()
-        ax.bar(l, listOfTimes[l])
+        ax.bar(l, listOfTimes[l], zorder=2)
 
     plt.title("Acurácia Média")
     plt.xlabel("Métodos")
@@ -310,7 +311,7 @@ def plotBars2(listOfTimes, listOfMethods):
     plt.yticks(range(0, 101, 10))
     plt.xticks(range(len(listOfTimes)), listOfMethods)
     plt.xticks(rotation=90)
-    plt.grid()
+    plt.grid(zorder=1, alpha=0.5)
     plt.show()
 
 
@@ -318,7 +319,7 @@ def plotBars3(listOfAccuracies, listOfMethods):
     
     for l in range(len(listOfAccuracies)):    
         ax = plt.axes()
-        ax.bar(l, 100-listOfAccuracies[l])
+        ax.bar(l, 100-listOfAccuracies[l], zorder=2)
 
     plt.title("Erro Médio")
     plt.xlabel("Métodos")
@@ -326,7 +327,7 @@ def plotBars3(listOfAccuracies, listOfMethods):
     #plt.yticks(range(0, 101, 10))
     plt.xticks(range(len(listOfAccuracies)), listOfMethods)
     plt.xticks(rotation=90)
-    plt.grid()
+    plt.grid(zorder=1, alpha=0.5)
     plt.show()
 
 
@@ -337,7 +338,7 @@ def plotBars4(baseline, listOfAccuracies, listOfMethods):
     for l in range(1,len(listOfAccuracies)):    
         ax = plt.axes()
         #ax.bar(l, (listOfAccuracies[l]-baseline)/listOfAccuracies[l])
-        ax.bar(l, ((listOfAccuracies[l]-baseline)/baseline)*100)
+        ax.bar(l, ((listOfAccuracies[l]-baseline)/baseline)*100, zorder=2)
         print('Pos {} - Redução do Erro ({}):{}'.format(rank[l], 
               listOfMethods[l],((listOfAccuracies[l]-baseline)/baseline)*100))
 
@@ -347,5 +348,5 @@ def plotBars4(baseline, listOfAccuracies, listOfMethods):
     #plt.yticks(range(0, 101, 10))
     plt.xticks(range(1, len(listOfAccuracies)), listOfMethods[1:])
     plt.xticks(rotation=90)
-    plt.grid()
+    plt.grid(zorder=1, alpha=0.5)
     plt.show()  

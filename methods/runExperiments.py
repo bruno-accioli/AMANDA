@@ -130,7 +130,7 @@ def run(dataValues, dataLabels, datasetDescription, isBinaryClassification, isIm
             print("Average micro-F1: {}".format(np.mean(arrF1Micro)))
             plotFunctions.finalEvaluation(accuracies, batches, algorithmName)
             plotFunctions.plotF1(arrF1Macro, batches, algorithmName)
-            plotFunctions.plotF1(arrF1Micro, batches, algorithmName)
+#            plotFunctions.plotF1(arrF1Micro, batches, algorithmName)
             avgAccuracies.append(np.mean(accuracies))
             
             #print data distribution in step t
@@ -177,8 +177,8 @@ def run(dataValues, dataLabels, datasetDescription, isBinaryClassification, isIm
     if isBinaryClassification:
         plotFunctions.plotBoxplot('mcc', listOfMCCs, listOfMethods)
 
-    plotFunctions.plotBoxplot('macro-f1', listOfF1sMacro, listOfMethods)
-    plotFunctions.plotBoxplot('micro-f1', listOfF1sMicro, listOfMethods)
+    plotFunctions.plotBoxplot('f1', listOfF1sMacro, listOfMethods)
+#    plotFunctions.plotBoxplot('f1', listOfF1sMicro, listOfMethods)
     plotFunctions.plotAccuracyCurves(listOfAccuracies, listOfMethods)
     plotFunctions.plotBars(listOfTimeExecutions, listOfMethods)
     plotFunctions.plotBars2(avgAccuracies, listOfMethods)
