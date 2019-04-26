@@ -56,7 +56,10 @@ def plotAccuracy(arr, steps, label):
     ax = plt.axes()
     ax.plot(c, arr, 'k', zorder=2)
     plt.yticks(range(0, 101, 10))
-    plt.xticks(range(0, steps+1, 10))
+    if steps > 10:
+        plt.xticks(range(1, steps+1, 10))
+    else:
+        plt.xticks(range(1, steps+1))
     plt.title(label)
     plt.ylabel("Acurácia")
     plt.xlabel("Step")
@@ -267,6 +270,10 @@ def plotBoxplot(mode, data, labels):
 
 def plotAccuracyCurves(listOfAccuracies, listOfMethods):
     limit = len(listOfAccuracies[0])+1
+    interval = 10
+    
+    if (limit <= 10):
+        interval = 1
 
     for acc in listOfAccuracies:
         acc = np.array(acc)
@@ -277,7 +284,7 @@ def plotAccuracyCurves(listOfAccuracies, listOfMethods):
     plt.title("Curva de Acurácia")
     plt.legend(listOfMethods, bbox_to_anchor = (1.05,1))
     plt.yticks([0,10,20,30,40,50,60,70,80,90,100])
-    plt.xticks(range(0, limit, 10))
+    plt.xticks(range(0, limit, interval))
     plt.ylabel("Acurácia")
     plt.xlabel("Step")
     plt.grid(zorder=1, alpha=0.5)
