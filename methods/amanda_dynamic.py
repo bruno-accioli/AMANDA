@@ -69,7 +69,12 @@ def cuttingPercentageHellinger(Xt_1, Xt, t=None):
         bins = int(np.sqrt(len(Xt_1)))
         hP = np.histogram(P+(-np.min(P)), bins=bins)
         hQ = np.histogram(Q+(-np.min(Q)), bins=bins)
-        res.append(hellinger(hP[1], hQ[1]))
+        
+        if((hP[1]<0).any() or (hQ[1]<0).any()):
+            minimum = np.min([hP[1].min(), hQ[1].min()])
+            res.append(hellinger(hP[1]-minimum, hQ[1]-minimum))
+        else:
+            res.append(hellinger(hP[1], hQ[1]))
     
     H = np.mean(res)
     alpha = _SQRT2-H

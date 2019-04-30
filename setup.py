@@ -265,6 +265,18 @@ def loadElecData(path, sep):
     #print(dataValues)
     #countInstances("elecdata", dataLabels)
     return dataValues, dataLabels.astype(int), description
+	
+def loadElec2Data(path, sep):
+    description = 'Electricity data Normalized. 5 features. 2 classes.'
+
+    dataValues = pd.read_csv(path+'real'+sep+'elecdata'+sep+'electricity-normalized.csv',sep = ",", header=0)
+    dataValues['class'] = dataValues['class'].apply(lambda x: 0 if (x == 'DOWN') else 1)
+    dataValues = pd.DataFrame.as_matrix(dataValues)
+    dataLabels = dataValues[:, 8]
+    dataValues = dataValues[:, 3:8]
+    #print(dataValues)
+    #countInstances("elecdata", dataLabels)
+    return dataValues, dataLabels.astype(int), description
 
 
 def loadNOAADataset(path, sep):
@@ -278,6 +290,24 @@ def loadNOAADataset(path, sep):
     are  used  to  determine  whether  each  day  experienced  rain  or no rain.
     '''
     dataValues = pd.read_csv(path+'real'+sep+'noaa'+sep+'noaa_dataset.csv',sep = ",", header=None)
+    dataValues = pd.DataFrame.as_matrix(dataValues)
+    dataLabels = dataValues[:, 8]
+    dataValues = dataValues[:,0:8]
+    #dataLabels = np.squeeze(np.asarray(dataLabels))
+    #countInstances("NOAA", dataLabels)
+    return dataValues, dataLabels.astype(int), description
+
+def loadNOAA2Dataset(path, sep):
+    description = 'NOAA dataset normalized. Eight  features. Two classes.'
+
+    #Test sets: Predicting 365 instances by step. 50 steps. Two classes.
+    '''
+    NOAA dataset:
+    Eight  features  (average temperature, minimum temperature, maximum temperature, dew
+    point,  sea  level  pressure,  visibility,  average wind speed, maximum  wind  speed)
+    are  used  to  determine  whether  each  day  experienced  rain  or no rain.
+    '''
+    dataValues = pd.read_csv(path+'real'+sep+'noaa'+sep+'noaa_normalised_dataset.csv',sep = ",", header=None)
     dataValues = pd.DataFrame.as_matrix(dataValues)
     dataLabels = dataValues[:, 8]
     dataValues = dataValues[:,0:8]
