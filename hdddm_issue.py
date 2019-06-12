@@ -52,7 +52,11 @@ def cuttingPercentageHellinger2(Xt_1, Xt, t=None):
         Q = Xt[:, i]
         hP = np.histogram(P, bins=bins)
         hQ = np.histogram(Q, bins=hP[1])
-        res.append(hellinger(hP[0] / NXt_1, hQ[0] / NXt))
+        
+        p = np.append(hP[0] / NXt_1, [0])
+        q = hQ[0] / NXt
+        q = np.append(q, [1-np.sum(q)])
+        res.append(hellinger(p, q))
     
     H = np.mean(res)
 
@@ -75,19 +79,64 @@ def cuttingPercentageBBD(Xt_1, Xt, beta, t=None):
 
     return b #percentage of similarity    
 
-def plotHistograms(x1, x2):
+def plotHistograms(x1, x2, n=1):
     bins = int(np.sqrt(len(x1)))
-    plt.hist(x1, label='x1', bins=bins, alpha=0.8)
-    plt.hist(x2, label='x2', bins=bins, alpha=0.8)
-    plt.show()
     
-x1 = np.random.normal(loc=0.0, scale=1.0, size=500)
+    plt.figure(figsize=(8*3, 5))
+    plt.grid(axis='y', alpha=0.75)
+    
+    plt.subplot(130 + n)  
+    
+    plt.xlim(-3, 10)
+    
+    plt.hist(x1, label='x1', bins=bins, color= 'tab:blue', alpha=0.9, rwidth=0.85)
+    plt.hist(x2, label='x2', bins=bins, color= 'tab:green', alpha=0.9, rwidth=0.85)
+    
+    dist = cuttingPercentageHellinger2(x1.reshape([-1,1]),x2.reshape([-1,1]))
+    plt.title('Distância = {:.3f}'.format(dist))
+    
+x1 = np.random.normal(loc=0.0, scale=1.0, size=250)
+bins = int(np.sqrt(len(x1)))
 
-x2 = x1 + 0.7
+offsets = [0.15, 2, 6]
+n = 1
+
+fig, [ax1, ax2, ax3] = plt.subplots(1, 3, sharey=True, figsize=(12, 3))
+
+x2 = x1 + offsets[0]
+ax1.set_xlim(-3, 10)    
+ax1.grid(axis='y', alpha=0.75)
+ax1.hist(x1, label='x1', bins=bins, color= 'tab:blue', alpha=0.9, rwidth=0.85)    
+ax1.hist(x2, label='x2', bins=bins, color= 'tab:green', alpha=0.9, rwidth=0.85)
+
+dist = cuttingPercentageHellinger2(x1.reshape([-1,1]),x2.reshape([-1,1]))
+ax1.set_title('Distância = {:.3f}'.format(dist))
+
+x2 = x1 + offsets[1]
+ax2.set_xlim(-3, 10)   
+ax2.grid(axis='y', alpha=0.75) 
+ax2.hist(x1, label='x1', bins=bins, color= 'tab:blue', alpha=0.9, rwidth=0.85)    
+ax2.hist(x2, label='x2', bins=bins, color= 'tab:green', alpha=0.9, rwidth=0.85)
+
+dist = cuttingPercentageHellinger2(x1.reshape([-1,1]),x2.reshape([-1,1]))
+ax2.set_title('Distância = {:.3f}'.format(dist))
+
+x2 = x1 + offsets[2]
+ax3.set_xlim(-3, 10)    
+ax3.grid(axis='y', alpha=0.75)
+ax3.hist(x1, label='x1', bins=bins, color= 'tab:blue', alpha=0.8, rwidth=0.7)    
+ax3.hist(x2, label='x2', bins=bins, color= 'tab:green', alpha=0.8, rwidth=0.7)
+
+dist = cuttingPercentageHellinger2(x1.reshape([-1,1]),x2.reshape([-1,1]))
+ax3.set_title('Distância = {:.3f}'.format(dist))
+
+plt.show() 
+#print(cuttingPercentageHellinger(x1.reshape([-1,1]),x2.reshape([-1,1])))
+#print(cuttingPercentageHellinger2(x1.reshape([-1,1]),x2.reshape([-1,1])))
+#print(cuttingPercentageBBD(x1.reshape([-1,1]), x2.reshape([-1,1]), beta=-1))
+#n += 1
 
 
-plotHistograms(x1, x2)
-
-cuttingPercentageHellinger(x1.reshape([-1,1]),x2.reshape([-1,1]))
-cuttingPercentageHellinger2(x1.reshape([-1,1]),x2.reshape([-1,1]))
-cuttingPercentageBBD(x1.reshape([-1,1]), x2.reshape([-1,1]), beta=-1)
+#cuttingPercentageHellinger(x1.reshape([-1,1]),x2.reshape([-1,1]))
+#
+#cuttingPercentageBBD(x1.reshape([-1,1]), x2.reshape([-1,1]), beta=-1)

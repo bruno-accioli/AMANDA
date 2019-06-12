@@ -20,8 +20,16 @@ def loadLabeledData(dataValues, dataLabels, initialDataLength, finalDataLength, 
 def selectedSlicedData(instances, labelsInstances, selectedIndexes):
     instances = np.array(instances)
     labelsInstances = np.array(labelsInstances)
-    X = instances[selectedIndexes]
-    y = labelsInstances[selectedIndexes]
+    if selectedIndexes.size == 0:
+        X = instances
+        y = labelsInstances
+    else:
+        try:
+            X = instances[selectedIndexes]
+            y = labelsInstances[selectedIndexes]
+        except IndexError:
+            X = instances[selectedIndexes.astype('int')]
+            y = labelsInstances[selectedIndexes.astype('int')]
 
     return X, y
 
@@ -286,7 +294,7 @@ def mahalanobisCoreSupportExtraction(Ut, indexesPredictedByClass, bestModelSelec
     return selectedMinIndexesByClass
 
 
-def pdfByClass(instances, labels, classes, densityFunction):
+def pdfByClass(instances, labels, classes, densityFunction, sampleWeights=None):
     indexesByClass = slicingClusteredData(labels, classes)
     pdfsByClass = {}
     numClasses = len(classes)
@@ -304,7 +312,7 @@ def pdfByClass(instances, labels, classes, densityFunction):
             elif densityFunction=='bayes':
                 pdfsByPoints = classifiers.bayesianGMM(points, instances, numClasses)
             elif densityFunction=='kde':
-                pdfsByPoints = classifiers.kde(points, instances)
+                pdfsByPoints = classifiers.kde(points, instances, sampleWeights)
             a = 0
             for i in indexes:
                 if pdfsByPoints[a] != -1:
@@ -385,6 +393,44 @@ def pdfByClass3(X, y, Ut, predicted, classes, criteria):
 
     return resultingX, resultingY
 
+def pdfByClassVamcod(instances, labels, old_batch_len, classes, densityFunction, 
+                     sampleWeights=None):
+    instances_old, instances_new = np.split(instances, [old_batch_len])
+    labels_old, labels_new = np.split(labels, [old_batch_len])
+    indexesByClassOld = slicingClusteredData(labels_old, classes)
+    indexesByClassNew = slicingClusteredData(labels_new, classes)
+    pdfsByClass_old = {}
+    pdfsByClass_new = {}
+    
+    for c in indexesByClassOld.keys():
+        indexesOld = indexesByClassOld[c]
+        indexesNew = indexesByClassNew[c]
+        pdfs_old = [-1] * instances.shape[0]
+        pdfs_new = [-1] * instances.shape[0]
+        
+        points_old = instances[indexesOld]
+        points_new = instances[indexesNew]
+        allPoints = np.vstack([points_old, points_new])
+        
+        pdfsByPoints_old, pdfsByPoints_new = classifiers.kde2(points_old, points_new, allPoints, sampleWeights)
+        
+        if (len(indexesOld) > 0):
+            a = 0
+            for i in indexesOld:
+                if pdfsByPoints_old[a] != -1:
+                    pdfs_old[i] = pdfsByPoints_old[a]
+                a+=1
+            pdfsByClass_old[c] = pdfs_old
+        
+        if (len(indexesNew) > 0):
+            a = 0
+            for i in indexesNew:
+                if pdfsByPoints_new[a] != -1:
+                    pdfs_new[i] = pdfsByPoints_new[a]
+                a+=1
+            pdfsByClass_new[c] = pdfs_new
+
+    return pdfsByClass_old, pdfsByClass_new
 
 def compactingDataDensityBased(densities, criteriaByClass, reverse=False):
     selectedIndexes=[]

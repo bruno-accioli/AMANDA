@@ -197,12 +197,31 @@ def bayesianGMM(points, allPoints, numComponents):
     return np.exp(clf.score_samples(points))
 
 
-def kde(points, allPoints):
-    kernel = KernelDensity(kernel='gaussian', bandwidth=0.4).fit(allPoints)
+def kde(points, allPoints, sampleWeights=None):
+    if sampleWeights is None:
+        kernel = KernelDensity(kernel='gaussian', bandwidth=0.4).fit(allPoints)
+    else:
+        kernel = KernelDensity(kernel='gaussian', bandwidth=0.4).fit(allPoints, sample_weight=sampleWeights)
     pdfs = np.exp(kernel.score_samples(points))
     
     return pdfs
 
+def kde2(points_old, points_new, allPoints, sampleWeights=None):
+    if sampleWeights is None:
+        kernel = KernelDensity(kernel='gaussian', bandwidth=0.4).fit(allPoints)
+    else:
+        kernel = KernelDensity(kernel='gaussian', bandwidth=0.4).fit(allPoints, sample_weight=sampleWeights)
+    
+    pdfs_old = np.array([])
+    pdfs_new = np.array([])
+    
+    if(len(points_old) > 0):
+        pdfs_old = np.exp(kernel.score_samples(points_old))
+        
+    if(len(points_new) > 0):
+        pdfs_new = np.exp(kernel.score_samples(points_new))
+    
+    return pdfs_old, pdfs_new
 
 def majorityVote(clusteredData, clusters, y):
     kPredicted = []

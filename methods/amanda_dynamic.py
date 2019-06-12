@@ -108,7 +108,11 @@ def cuttingPercentageHellinger2(Xt_1, Xt, t=None):
         Q = Xt[:, i]
         hP = np.histogram(P, bins=bins)
         hQ = np.histogram(Q, bins=hP[1])
-        res.append(hellinger(hP[0] / NXt_1, hQ[0] / NXt))
+        
+        p = np.append(hP[0] / NXt_1, [0])
+        q = hQ[0] / NXt
+        q = np.append(q, [max(1-np.sum(q), 0)])
+        res.append(hellinger(p, q))
     
     H = np.mean(res)
     alpha = 1-H
