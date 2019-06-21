@@ -6,7 +6,7 @@ from sklearn import mixture
 
 
 def _gmm_with_pdf(points, allPoints, numComponents, sampleWeights=None,
-                density_model=None):
+                  density_model=None):
     if (density_model is None):
         if len(allPoints) < numComponents:
             numComponents = len(allPoints)
@@ -20,7 +20,7 @@ def _gmm_with_pdf(points, allPoints, numComponents, sampleWeights=None,
 
 
 def _bayesian_gmm(points, allPoints, numComponents, sampleWeights=None,
-                 density_model=None):
+                  density_model=None):
     if (density_model is None):
         if len(allPoints) < numComponents:
             numComponents = len(allPoints)
@@ -69,10 +69,8 @@ def _pdf_by_class(X, y, classes, densityFunction, sampleWeights=None,
                 pdfs_by_points, _ = densityFunction(class_instances, X,
                                                     numClasses, sampleWeights)
             else:
-                pdfs_by_points, density_model = densityFunction(class_instances,
-                                                                X, numClasses,
-                                                                sampleWeights,
-                                                                density_model)
+                pdfs_by_points, density_model = densityFunction(
+                    class_instances, X, numClasses, sampleWeights, density_model)
             pdfs[indexes] = pdfs_by_points
 #            a = 0
 #            for i in indexes:
@@ -101,6 +99,24 @@ def _get_density_function(density_function):
         return _gmm_with_pdf
 
 
+def _select_instances_indexes(weigths_by_class, excluding_percentage):
+        selected_indexes = []
+        keeping_percentage = 1 - excluding_percentage
+        for c in weigths_by_class:
+            class_instances = weigths_by_class[c]
+#            numSelected = int(np.floor(criteria*len(arrPdf[arrPdf>-1])))
+            num_selected = int(keeping_percentage * class_instances.shape[0])
+
+            indexes = (-class_instances).argsort()[:num_selected]
+            selected_indexes.append(indexes)
+
+        stacked_indexes = selected_indexes[0]
+        for i in range(1, len(selected_indexes)):
+            stacked_indexes = np.hstack([stacked_indexes, selected_indexes[i]])
+
+        return stacked_indexes
+
+
 class CSE():
     def __init__(self, density_function='kde', classes=[],
                  estimate_density_by_class=False):
@@ -108,8 +124,8 @@ class CSE():
         self.classes = classes
         self.estimate_density_by_class = estimate_density_by_class
 
-    def get_core(excluding_percentage, Xt, yt, Xt_1=None, yt_1=None,
-                 sample_weights):
+    def get_core(self, excluding_percentage, Xt, yt, Xt_1=None, yt_1=None,
+                 sample_weights=None):
         Xt = check_array(Xt, dtype='numeric')
         yt = check_array(yt, ensure_2d=False)
 
@@ -119,7 +135,7 @@ class CSE():
         else:
             X = Xt
 
-        if yt is not None:
+        if yt_1 is not None:
             yt_1 = check_array(yt_1, ensure_2d=False)
             y = np.vstack([yt, yt_1])
         else:
@@ -131,7 +147,7 @@ class CSE():
                                          self.estimate_density_by_class)
 
         # selecionar instancias
-        selected_indexes = _select_instances_indexes(weigths_by_class,
+        selected_indexes = _select_instances_indexes(weights_by_class,
                                                      excluding_percentage)
 
         if len(selected_indexes) > 0:
@@ -140,19 +156,4 @@ class CSE():
 
         return X, y
 
-    def _select_instances_indexes(weigths_by_class, excluding_percentage):
-        selected_indexes = []
-
-        for c in weigths_by_class:
-            class_instances = weigths_by_class[c]
-#            numSelected = int(np.floor(criteria*len(arrPdf[arrPdf>-1])))
-            num_selected = int(excluding_percentage * class_instances.shape[0])
-
-            indexes = (-class_instances).argsort()[:num_selected]
-            selected_indexes.append(indexes)
-
-        stacked_indexes = selected_indexes[0]
-        for i in range(1, len(selected_indexes)):
-            stacked_indexes = np.hstack([stacked_indexes, selected_indexes[i]])
-
-        return stacked_indexes
+    

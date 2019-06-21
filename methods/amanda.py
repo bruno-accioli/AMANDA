@@ -6,7 +6,7 @@ from skmultiflow.core import ClassifierMixin
 from skmultiflow.core import BaseSKMObject
 from sklearn.base import BaseEstimator
 from sklearn.semi_supervised import LabelSpreading
-import CSE
+from CSE import CSE
 
 
 def _get_model(classifier):
@@ -53,198 +53,204 @@ def _check_valid_beta(beta):
 
 
 _SQRT2 = np.sqrt(2)
+
+
 def hellinger(p, q):
     return euclidean(np.sqrt(p), np.sqrt(q)) / _SQRT2
 
 
-def BhattacharyyaCefficient(p,q):
-    return np.sqrt(np.multiply(p,q)).sum()
+def BhattacharyyaCefficient(p, q):
+    return np.sqrt(np.multiply(p, q)).sum()
 
 
 def BBD(bc, beta):
-    return np.log(1 - np.subtract(1, bc)/beta) / np.log(1 - 1/beta)
+    return np.log(1 - np.subtract(1, bc) / beta) / np.log(1 - 1 / beta)
 
 
-def cutting_percentage_hellinger(Xt_1, Xt, t=None):
+def cutting_percentage_hellinger(Xt_1, Xt, beta=None):
     res = []
-    
+
     for i in range(Xt_1.shape[1]):
         P = Xt_1[:, i]
         Q = Xt[:, i]
         bins = int(np.sqrt(len(Xt_1)))
-        hP = np.histogram(P+(-np.min(P)), bins=bins)
-        hQ = np.histogram(Q+(-np.min(Q)), bins=bins)
-        
-        if((hP[1]<0).any() or (hQ[1]<0).any()):
+        hP = np.histogram(P + (-np.min(P)), bins=bins)
+        hQ = np.histogram(Q + (-np.min(Q)), bins=bins)
+
+        if((hP[1] < 0).any() or (hQ[1] < 0).any()):
             minimum = np.min([hP[1].min(), hQ[1].min()])
-            res.append(hellinger(hP[1]-minimum, hQ[1]-minimum))
+            res.append(hellinger(hP[1] - minimum, hQ[1] - minimum))
         else:
             res.append(hellinger(hP[1], hQ[1]))
-    
+
     H = np.mean(res)
-    alpha = _SQRT2-H
+    alpha = _SQRT2 - H
     #print(t, H, alpha)
-    #if alpha < 0:
+    # if alpha < 0:
     #    alpha *= -1
-    
+
     # Sanity Check
 #    validation = [True if (i>1 or i<0) else False for i in res]
 #    filtered = [i for (i, v) in zip(res, validation) if v]
-#    
+#
 #    if True in validation:
 #        warnings.warn("t={} : Hellinger1 Invalid distance value(s): {}".format(t,filtered))
-#        
+#
 #    if (alpha > 1 or alpha < 0):
 #        warnings.warn("t={} : Hellinger1 Invalid calculated alpha value: {}".format(t,alpha))
-    
+
     if alpha > 0.9:
         alpha = 0.9
     elif alpha < 0.5:
         alpha = 0.5
-    return 1-alpha #percentage of similarity
+    return alpha  # percentage of similarity
 
-def cutting_percentage_hellinger2(Xt_1, Xt, t=None):
+
+def cutting_percentage_hellinger2(Xt_1, Xt, beta=None):
     res = []
-    NXt_1 = len(Xt_1)    
-    NXt = len(Xt)    
-    bins = int(np.sqrt(NXt_1)) 
+    NXt_1 = len(Xt_1)
+    NXt = len(Xt)
+    bins = int(np.sqrt(NXt_1))
     for i in range(Xt_1.shape[1]):
         P = Xt_1[:, i]
         Q = Xt[:, i]
         hP = np.histogram(P, bins=bins)
         hQ = np.histogram(Q, bins=hP[1])
-        
+
         p = np.append(hP[0] / NXt_1, [0])
         q = hQ[0] / NXt
-        q = np.append(q, [max(1-np.sum(q), 0)])
+        q = np.append(q, [max(1 - np.sum(q), 0)])
         res.append(hellinger(p, q))
-    
+
     H = np.mean(res)
-    alpha = 1-H
+    alpha = 1 - H
     #print(t, H, alpha)
-    #if alpha < 0:
+    # if alpha < 0:
     #    alpha *= -1
-    
+
     # Sanity Check
 #    validation = [True if (i>1 or i<0) else False for i in res]
 #    filtered = [i for (i, v) in zip(res, validation) if v]
-#    
+#
 #    if True in validation:
 #        warnings.warn("t={} : Hellinger2 Invalid distance value(s): {}".format(t,filtered))
-#        
+#
 #    if (alpha > 1 or alpha < 0):
-#        warnings.warn("t={} : Hellinger2 Invalid calculated alpha value: {}".format(t,H))        
-#    
+#        warnings.warn("t={} : Hellinger2 Invalid calculated alpha value: {}".format(t,H))
+#
     if alpha > 0.9:
         alpha = 0.9
     elif alpha < 0.5:
         alpha = 0.5
-    return 1-alpha #percentage of similarity
+    return alpha  # percentage of similarity
 
-def cutting_percentage_bbd(Xt_1, Xt, beta, t=None):
+
+def cutting_percentage_bbd(Xt_1, Xt, beta):
     bcs = []
-    NXt_1 = len(Xt_1)    
+    NXt_1 = len(Xt_1)
     NXt = len(Xt)
-    bins = int(np.sqrt(NXt_1))    
+    bins = int(np.sqrt(NXt_1))
     for i in range(Xt_1.shape[1]):
         P = Xt_1[:, i]
-        Q = Xt[:, i]        
+        Q = Xt[:, i]
         hP = np.histogram(P, bins=bins)
         hQ = np.histogram(Q, bins=hP[1])
         bcs.append(BhattacharyyaCefficient(hP[0] / NXt_1, hQ[0] / NXt))
-    
+
     bc = np.mean(bcs)
     b = BBD(bc, beta)
-    alpha = 1-b
+    alpha = 1 - b
     #print(t, H, alpha)
-    #if alpha < 0:
+    # if alpha < 0:
     #    alpha *= -1
-    
+
     # Sanity Check
 #    validation = [True if (i>1 or i<0) else False for i in bcs]
 #    filtered = [i for (i, v) in zip(bcs, validation) if v]
-#    
+#
 #    if True in validation:
 #        warnings.warn("t={} : BBD Invalid Bhatacheryya Coefficient value(s): {}".format(t,filtered))
-#        
+#
 #    if (alpha > 1 or alpha < 0):
-#        warnings.warn("t={} : BBD Invalid calculated alpha value: {}".format(t,b))        
-    
+#        warnings.warn("t={} : BBD Invalid calculated alpha value: {}".format(t,b))
+
     if alpha > 0.9:
         alpha = 0.9
     elif alpha < 0.5:
         alpha = 0.5
-    return 1-alpha #percentage of similarity
-
+    return alpha  # percentage of similarity
 
 
 class AmandaBase(BaseSKMObject, ClassifierMixin):
     def __init__(self, classifier='labelspreading',
-                 instance_weight_method='kde', reset=True,
+                 density_function='kde', reset=True,
                  estimate_density_by_class=False):
 
         self.classifier = classifier
-        self.cse_method = CSE(density_function='kde',
-                              estimate_density_by_class=False)
+        self.cse_method = CSE(density_function, estimate_density_by_class)
         self.reset = reset
-        self.current_batch = None
-        self.current_batch_predictions = None
-        self.last_batch_X = None
-        self.last_batch_y = None
+        self._current_batch_X = None
+        self._current_batch_predictions = None
+        self._last_batch_X = None
+        self._last_batch_y = None
+        self._first_train = True
 
     def fit(self, X, y, classes=None, sample_weight=None):
         self.model = _get_model(self.classifier)
         self.classes = list(set(y))
-        self.cse_method = self.classes
+        self.cse_method.classes = self.classes
 
         self.model.fit(X, y)
 
         self._last_batch_X = X
         self._last_batch_y = y
-
-        self._first_train = True
-
+        
+        self._first_train = False
+        
         return self
 
     def partial_fit(self, X, y=None, classes=None, sample_weight=None):
-
-        if (self._first_train is False):
-            self.fit(self._last_batch_X, self._last_batch_y)
-
-        self.current_batch = X
-        self.current_batch_predictions = self.model.predict(X)
-
-        # calculate alpha
-        cutting_percentage = self._get_cutting_percentage()
-
-        # CSE
-#        if (self.reset):
-#            all_instances = X
-#            all_labels = self.predicted
-#        else:
-#            all_instances = np.vstack([self.last_batch_X, X])
-#            all_labels = np.hstack([self.last_batch_y,
-#                                    self.current_batch_predictions])
-        # CSE
-        if (self.reset):
-            core_instances, core_labels =\
-                self.cse_method.get_core(cutting_percentage, X,
-                                         self.current_batch_predictions)
+        
+        if (self._first_train is True):
+            self.fit(X, y)        
         else:
-            core_instances, core_labels =\
-                self.cse_method.get_core(cutting_percentage, X,
-                                         self.current_batch_predictions,
-                                         self.last_batch_X, self.last_batch_y)
-
-        self.last_batch_X = core_instances
-        self.last_batch_y = core_labels
-
-        self._first_train = False
+            self.fit(self._last_batch_X, self._last_batch_y)
+            
+            self._current_batch_X = X
+            self._current_batch_predictions = self.model.predict(X)
+    
+            # calculate alpha
+            cutting_percentage = self._get_cutting_percentage()
+    
+            # CSE
+    #        if (self.reset):
+    #            all_instances = X
+    #            all_labels = self.predicted
+    #        else:
+    #            all_instances = np.vstack([self.last_batch_X, X])
+    #            all_labels = np.hstack([self.last_batch_y,
+    #                                    self.current_batch_predictions])
+            # CSE
+            if (self.reset):
+                core_instances, core_labels =\
+                    self.cse_method.get_core(cutting_percentage,
+                                             self._current_batch_X,
+                                             self._current_batch_predictions)
+            else:
+                core_instances, core_labels =\
+                    self.cse_method.get_core(cutting_percentage,
+                                             self._current_batch_X,
+                                             self._current_batch_predictions,
+                                             self._last_batch_X,
+                                             self._last_batch_y)
+    
+            self._last_batch_X = core_instances
+            self._last_batch_y = core_labels
 
         return self
 
     def predict(self, X):
-        if (np.array_equal(self.current_batch, X)):
+        if (np.array_equal(self._current_batch_X, X)):
             return self.predicted
         else:
             return self.model.predict(X)
@@ -280,7 +286,13 @@ class AmandaDCP(AmandaBase):
                          estimate_density_by_class)
         self.distance_method = _get_distance(distance, beta)
         self.beta = beta
+        self.excluding_percentage = 0.5
+        self.excluding_percentage_list = []
 
     # TO DO
     def _get_cutting_percentage(self):
-        return super()._get_excluding_percentage()
+        self.excluding_percentage = self.distance_method(self._last_batch_X,
+                                                         self._current_batch_X,
+                                                         self.beta)
+        self.excluding_percentage_list.append(self.excluding_percentage)
+        return self.excluding_percentage
