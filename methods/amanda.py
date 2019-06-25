@@ -20,24 +20,23 @@ def _get_model(classifier):
                          format(supported_classfiers, classifier))
 
     if classifier == 'labelspreading':
-        return LabelSpreading(kernel='rbf', gamma=20, n_neighbors=7, alpha=0.2,
-                              max_iter=30, tol=0.001, n_jobs=None)
+        return LabelSpreading(kernel='knn', alpha=0.9999999999999999)
 
 
 def _get_distance(distance, beta=None):
-    supported_distances = ['hellinger', 'BBD']
+    supported_distances = ['hellinger', 'hellinger2', 'bbd']
 
     if distance not in supported_distances:
         raise ValueError("Amanda supports only weight methods in {}, got {}".
                          format(supported_distances, distance))
 
-    if distance == 'Hellinger':
+    if distance == 'hellinger':
         return cutting_percentage_hellinger
 
-    if distance == 'Hellinger2':
+    if distance == 'hellinger2':
         return cutting_percentage_hellinger2
 
-    if distance == 'BBD':
+    if distance == 'bbd':
         _check_valid_beta(beta)
         return cutting_percentage_bbd
 
@@ -182,11 +181,11 @@ def cutting_percentage_bbd(Xt_1, Xt, beta):
 
 
 class AmandaBase(BaseSKMObject, ClassifierMixin):
-    def __init__(self, classifier='labelspreading',
+    def __init__(self, model='labelspreading',
                  density_function='kde', reset=True,
                  estimate_density_by_class=False):
 
-        self.classifier = classifier
+        self.model = _get_model(model)
         self.cse_method = CSE(density_function, estimate_density_by_class)
         self.reset = reset
         self._current_batch_X = None
@@ -195,8 +194,7 @@ class AmandaBase(BaseSKMObject, ClassifierMixin):
         self._last_batch_y = None
         self._first_train = True
 
-    def fit(self, X, y, classes=None, sample_weight=None):
-        self.model = _get_model(self.classifier)
+    def fit(self, X, y, classes=None, sample_weight=None):        
         self.classes = list(set(y))
         self.cse_method.classes = self.classes
 
@@ -264,11 +262,11 @@ class AmandaBase(BaseSKMObject, ClassifierMixin):
 
 
 class AmandaFCP(AmandaBase):
-    def __init__(self, excluding_percentage=0.5, classifier='labelspreading',
-                 instance_weight_method='kde', reset=True,
+    def __init__(self, excluding_percentage=0.5, model='labelspreading',
+                 density_function='kde', reset=True,
                  estimate_density_by_class=False):
 
-        super().__init__(classifier, instance_weight_method, reset,
+        super().__init__(model, density_function, reset,
                          estimate_density_by_class)
         self.excluding_percentage = excluding_percentage
         self.excluding_percentage_list = []
@@ -278,11 +276,11 @@ class AmandaFCP(AmandaBase):
 
 
 class AmandaDCP(AmandaBase):
-    def __init__(self, classifier='labelspreading',
-                 instance_weight_method='kde', distance='Hellinger',
+    def __init__(self, model='labelspreading',
+                 density_function='kde', distance='hellinger',
                  beta=None, reset=True, estimate_density_by_class=False):
 
-        super().__init__(classifier, instance_weight_method, reset,
+        super().__init__(model, density_function, reset,
                          estimate_density_by_class)
         self.distance_method = _get_distance(distance, beta)
         self.beta = beta
