@@ -4,6 +4,7 @@ from source import util
 from source import classifiers
 from sklearn.base import BaseEstimator, ClassifierMixin
 from scipy.spatial.distance import euclidean
+from sklearn.metrics import f1_score
 import math
 
 
@@ -39,10 +40,7 @@ def BC(p,q):
     return np.sqrt(np.multiply(p,q)).sum()
 
 def BBD(bc, beta):
-    if beta == 10:
-        return -10 * math.log((9 + bc)/10, 2.867971990792441)
-    else:
-        return np.log(1 - np.subtract(1,bc)/beta) / np.log(1 - 1/beta)
+    return np.log(1 - np.subtract(1,bc)/beta) / np.log(1 - 1/beta)
 
 def cuttingPercentage(Xt_1, Xt, distanceMetric, epsilons=[], hds=[], alpha=None, 
                       beta=None, t=None):
@@ -322,6 +320,7 @@ class run(BaseEstimator, ClassifierMixin):
             
     def fit(self, dataValues, dataLabels=None):
         arrAcc = []
+        arrF1 = []
         classes = list(set(dataLabels))
         initialDataLength = 0
         finalDataLength = self.initialLabeledData
@@ -346,6 +345,7 @@ class run(BaseEstimator, ClassifierMixin):
                 predicted = clf.predict(Ut)
                 # Evaluating classification
                 arrAcc.append(metrics.evaluate(yt, predicted))
+                arrF1.append(f1_score(yt, predicted, average='macro'))
 
                 # ***** Box 4 *****
                 #excludingPercentage = cuttingPercentage(X, Ut, t)
@@ -363,11 +363,11 @@ class run(BaseEstimator, ClassifierMixin):
                 # ***** Box 5 *****
                 if reset == True:
                     #Considers only the last distribution (time-series like)
-                    pdfsByClass = util.pdfByClass(Ut, predicted, classes, self.densityFunction)
+                    pdfsByClass = util.pdfByClass(Ut, yt, classes, self.densityFunction)
                 else:
                     #Considers the past and actual data (concept-drift like)
                     allInstances = np.vstack([X, Ut])
-                    allLabels = np.hstack([y, predicted])
+                    allLabels = np.hstack([y, yt])
                     pdfsByClass = util.pdfByClass(allInstances, allLabels, classes, self.densityFunction)
                     
                 selectedIndexes = util.compactingDataDensityBased2(pdfsByClass, excludingPercentage)
@@ -375,7 +375,7 @@ class run(BaseEstimator, ClassifierMixin):
                 # ***** Box 6 *****
                 if reset == True:
                     #Considers only the last distribution (time-series like)
-                    X, y = util.selectedSlicedData(Ut, predicted, selectedIndexes)
+                    X, y = util.selectedSlicedData(Ut, yt, selectedIndexes)
                 else:
                     #Considers the past and actual data (concept-drift like)
                     X, y = util.selectedSlicedData(allInstances, allLabels, selectedIndexes)
@@ -425,7 +425,8 @@ class run(BaseEstimator, ClassifierMixin):
             
      
         # returns accuracy array and last selected points
-        self.threshold_ = arrAcc
+        #self.threshold_ = arrAcc
+        self.threshold_ = arrF1
         return self
     
     def predict(self):
