@@ -66,7 +66,7 @@ def _pdf_by_class(X, y, classes, densityFunction, sampleWeights=None,
 
             # points from a class, all points, number of components
             if (estimate_density_by_class):
-                pdfs_by_points, _ = densityFunction(class_instances, class_instances,
+                pdfs_by_points, _ = densityFunction(class_instances, X,
                                                     numClasses, sampleWeights)
             else:
                 pdfs_by_points, density_model = densityFunction(
